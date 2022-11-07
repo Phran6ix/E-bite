@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   Int       @id @default(autoincrement())
+  email                String    @unique
+  firstName            String
+  lastName             String
+  role                 ROLE      @default(USER)
+  createdAt            DateTime  @default(now())
+  password             String
+  isVerfied            Boolean   @default(false)
+  OTP                  Int?      @unique
+  OTPexpires           DateTime?
+  phoneNo              Int       @unique
+  address              String
+  profilePic           String?
+  passwordResetToken   String?
+  passwordResetExpires Int?
+  Review               Review[]
+  Cart                 Cart[]
+  Product              Product[]
+  Order                Order[]
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  category      CATEGORY
+  name          String
+  photo         String
+  price         Int
+  desciption    String
+  averageRating Float
+  slug          String
+  User          User     @relation(fields: [userId], references: [id])
+  Review        Review[]
+  userId        Int
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  review    String
+  date      DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId Int?
+}
+
+model Cart {
+  id         Int     @id @default(autoincrement())
+  Product    String
+  Quantity   Int
+  TotalPrice Int
+  User       User    @relation(fields: [userId], references: [id])
+  userId     Int
+  Order      Order[]
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  OrderedAt     DateTime @default(now())
+  Cart          Cart     @relation(fields: [cartId], references: [id])
+  cartId        Int      @unique
+  Delivered     Boolean  @default(false)
+  Payment       Boolean  @default(false)
+  ToBeDelivered String
+
+  User   User? @relation(fields: [userId], references: [id])
+  userId Int?
+}
+
+enum ROLE {
+  USER
+  VENDOR
+  ADMIN
+}
+
+enum CATEGORY {
+  CEREALS
+  SWALLOW
+  SNACKS
+}
