@@ -71,11 +71,7 @@ export async function signUp(req: Request, res: Response, next: NextFunction) {
   response(res, 201, "Success", user);
 }
 
-export async function verifyOTP(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function verifyOTP(req: Request, res: Response, next: NextFunction) {
   const OTP: number = req.body.otp;
 
   if (!OTP) {
@@ -97,11 +93,7 @@ export async function verifyOTP(
   }
 }
 
-export async function userLogin(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function userLogin(req: Request, res: Response, next: NextFunction) {
   let user;
   if (req.body.query.includes("@")) {
     user = await prisma.user.findUnique({
@@ -112,9 +104,7 @@ export async function userLogin(
   }
 
   if (!user?.isVerfied) {
-    return next(
-      new AppError("Your account is not verified, please verify", 401)
-    );
+    return next(new AppError("Your account is not verified, please verify", 401));
   }
 
   if (!user || !(await comparePassword(req.body.password, user.password))) {
@@ -131,10 +121,7 @@ export async function userLogin(
 
 export async function protect(req: Request, res: Response, next: NextFunction) {
   let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     token = req.headers.authorization.split(" ")[1];
   }
 
@@ -173,11 +160,7 @@ export async function protect(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-export async function updatePassword(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export async function updatePassword(req: Request, res: Response, next: NextFunction) {
   const user = req.user;
   if (!user) {
     return next(new AppError("An error occured", 400));
