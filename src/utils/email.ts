@@ -8,7 +8,7 @@ class Email {
   message: string;
   constructor(user: any, message: string) {
     this.to = user.email;
-    this.from = process.env.SMTP_USER;
+    this.from = "E-BITE";
     this.message = message;
   }
 
