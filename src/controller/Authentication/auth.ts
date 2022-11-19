@@ -17,8 +17,9 @@ declare global {
         lastName: string;
         role: string;
         address: string;
+        email: string;
         password: string;
-        phoneNo: number;
+        phoneNo: string;
         Cart?: any;
         Review?: any;
         Product?: any;
@@ -34,7 +35,7 @@ const prisma = new PrismaClient();
 export async function signUp(req: Request, res: Response, next: NextFunction) {
   const { firstName, lastName, address, email } = req.body;
 
-  let phoneNo: number = req.body.phoneNo;
+  let phoneNo: any = req.body.phoneNo;
 
   if (req.body.password != req.body.confirmPassword) {
     return next(new AppError("Passwords are not the same", 400));
@@ -65,43 +66,58 @@ export async function signUp(req: Request, res: Response, next: NextFunction) {
     },
   });
 
-  response(res, 201, "Success", user);
+  response(res, 201, "Success", {});
 }
 
 export async function verifyOTP(req: Request, res: Response, next: NextFunction) {
   const OTP: number = req.body.otp;
 
-  if (!OTP) {
+  if (!OTP || !req.body.email) {
     return next(new AppError("Invalid Input", 400));
   }
 
-  const user = await prisma.user.update({
+  const user = await prisma.user.findUnique({
     where: {
-      OTP,
+      email: req.body?.email,
+    },
+  });
+
+  if (!user || user.OTP !== OTP) {
+    return next(new AppError("Invalid input", 400));
+  }
+
+  await prisma.user.update({
+    where: {
+      email: req.body.email,
     },
     data: {
       isVerfied: true,
       OTP: null,
     },
   });
-
-  if (user) {
-    response(res, 204, "Success", {});
-  }
+  response(res, 204, "Success", {});
 }
 
 export async function userLogin(req: Request, res: Response, next: NextFunction) {
   let user;
+
   if (req.body.query.includes("@")) {
     user = await prisma.user.findUnique({
       where: {
         email: req.body.query,
       },
+      select: {
+        isVerfied: true,
+        password: true,
+        firstName: true,
+        role: true,
+        id: true,
+        phoneNo: true,
+        email: true,
+        Order: true,
+        Review: true,
+      },
     });
-  }
-
-  if (!user?.isVerfied) {
-    return next(new AppError("Your account is not verified, please verify", 401));
   }
 
   if (!user || !(await comparePassword(req.body.password, user.password))) {
@@ -109,11 +125,18 @@ export async function userLogin(req: Request, res: Response, next: NextFunction)
   }
 
   const token = await sendToken(user.id);
-  res.status(200).json({
-    status: "Success",
-    token,
-    data: user,
-  });
+
+  if (!user.isVerfied) {
+    res.status(403).json({
+      message: "User is not found",
+    });
+  } else {
+    res.status(200).json({
+      status: "Success",
+      token,
+      data: user,
+    });
+  }
 }
 
 export async function protect(req: Request, res: Response, next: NextFunction) {
@@ -127,6 +150,7 @@ export async function protect(req: Request, res: Response, next: NextFunction) {
   }
 
   const decodeUser = await verifyToken(token);
+
   if (!decodeUser) {
     return next(new AppError("Invalid Token", 400));
   }
@@ -143,7 +167,6 @@ export async function protect(req: Request, res: Response, next: NextFunction) {
       phoneNo: true,
       Review: true,
       Product: true,
-      Cart: true,
       Order: true,
       role: true,
       email: true,
@@ -249,4 +272,44 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
     },
   });
   response(res, 200, "Success", {});
+}
+
+export function restrict(...roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new AppError("You are not authorized", 403));
+    }
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError("You are not authorized", 403));
+    }
+    next();
+  };
+}
+
+export async function resendOTP(req: Request, res: Response, next: NextFunction) {
+  const { email } = req.body;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  const otp = await sendOTP(user);
+  await prisma.user.update({
+    where: {
+      email,
+    },
+    data: {
+      OTP: otp,
+    },
+  });
+
+  res.status(200).json({
+    message: "OTP has been sent",
+  });
 }

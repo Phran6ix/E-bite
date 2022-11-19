@@ -4,6 +4,7 @@
   "description": "Send money to people in your localty",
   "main": "server.js",
   "scripts": {
+    "start": "nodemon --watch './**/*.ts' --exec 'ts-node' src/server.ts",
     "dev": "nodemon src/server.ts"
   },
   "author": "Francis Olatinwo",

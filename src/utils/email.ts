@@ -23,7 +23,6 @@ class Email {
   }
 
   async send(subject: string) {
-    console.log("send");
     const mailOption = {
       to: this.to,
       from: this.from,
