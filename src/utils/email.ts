@@ -8,7 +8,7 @@ class Email {
   message: string;
   constructor(user: any, message: string) {
     this.to = user.email;
-    this.from = process.env.SMTP_USER;
+    this.from = "E-BITE";
     this.message = message;
   }
 
@@ -23,7 +23,6 @@ class Email {
   }
 
   async send(subject: string) {
-    console.log("send");
     const mailOption = {
       to: this.to,
       from: this.from,

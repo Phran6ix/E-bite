@@ -21,13 +21,12 @@ model User {
   isVerfied            Boolean   @default(false)
   OTP                  Int?      @unique
   OTPexpires           DateTime?
-  phoneNo              Int       @unique
+  phoneNo              String    @unique
   address              String
   profilePic           String?
   passwordResetToken   String?
   passwordResetExpires Int?
   Review               Review[]
-  Cart                 Cart[]
   Product              Product[]
   Order                Order[]
 }
@@ -35,15 +34,16 @@ model User {
 model Product {
   id            Int      @id @default(autoincrement())
   category      CATEGORY
-  name          String
+  name          String   @unique
   photo         String
   price         Int
   desciption    String
   averageRating Float
+  inStock       Int?
   slug          String
   User          User     @relation(fields: [userId], references: [id])
-  Review        Review[]
   userId        Int
+  Review        Review[]
 }
 
 model Review {
@@ -56,27 +56,16 @@ model Review {
   productId Int?
 }
 
-model Cart {
-  id         Int     @id @default(autoincrement())
-  Product    String
-  Quantity   Int
-  TotalPrice Int
-  User       User    @relation(fields: [userId], references: [id])
-  userId     Int
-  Order      Order[]
-}
-
 model Order {
-  id            Int      @id @default(autoincrement())
-  OrderedAt     DateTime @default(now())
-  Cart          Cart     @relation(fields: [cartId], references: [id])
-  cartId        Int      @unique
-  Delivered     Boolean  @default(false)
-  Payment       Boolean  @default(false)
-  ToBeDelivered String
+  id        Int      @id @default(autoincrement())
+  OrderedAt DateTime @default(now())
 
-  User   User? @relation(fields: [userId], references: [id])
-  userId Int?
+  Delivered     Boolean @default(false)
+  Paid          Boolean @default(false)
+  ToBeDelivered String
+  product       String
+  user          User    @relation(fields: [userId], references: [id])
+  userId        Int
 }
 
 enum ROLE {
@@ -86,7 +75,8 @@ enum ROLE {
 }
 
 enum CATEGORY {
-  CEREALS
-  SWALLOW
-  SNACKS
+  Cereals
+  Swallow
+  Snacks
+  SmallChops
 }
