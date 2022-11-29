@@ -3,10 +3,12 @@ import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 import Email from "../../utils/email";
 
+import sendSMS from "../../utils/twilio";
 const prisma = new PrismaClient();
 
 import BaseController from "../baseController";
 import AppError from "../../utils/AppError";
+import { send } from "process";
 
 // export interface Dictionary<T> {
 //   [key: string]: T;
@@ -51,6 +53,8 @@ export default class OrderController extends BaseController {
     const orderUrl = `${this.req.protocol}://${this.req.get("host")}/api/v1/order/get-order/${newOrder.id}`;
 
     await new Email(product.User, `Order details: ${orderUrl}`).send("New order has been placed");
+
+    await sendSMS(this.req.user.phoneNo, "Your order has been placed successfully");
 
     this.populateData(201, "Success", {
       message: "Order has been created",

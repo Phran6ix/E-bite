@@ -13,7 +13,7 @@ router.delete("/delete-all", protect, restrict("ADMIN"), (...fromExpress) =>
   new ProductController(...fromExpress).deleteAll()
 );
 router.get("/all-products", protect, (...fromExpress) => new ProductController(...fromExpress).getProducts());
-router.get("/:productId", protect, (...fromExpress) => new ProductController(...fromExpress).getProduct);
+router.get("/:productId", protect, (...fromExpress) => new ProductController(...fromExpress).getProduct());
 router.patch("/:productId", protect, restrict("VENDOR", "ADMIN"), (...fromExpress) =>
   new ProductController(...fromExpress).updateProduct()
 );
